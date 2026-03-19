@@ -42,6 +42,13 @@ def create_application() -> FastAPI:
         expose_headers=["X-Total-Count", "X-API-Version", "Retry-After"],
     )
 
+    @app.get("/")
+    def home():
+        return {
+            "message": "Moviemate API is running 🚀",
+            "docs": "/docs"
+        }
+
     @app.get("/health", tags=["Health"])
     async def health_check() -> dict[str, str]:
         return {"status": "Server is running smoothly!"}
