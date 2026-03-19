@@ -1,22 +1,26 @@
-from datetime import datetime
-
 from pydantic import BaseModel, Field
 
 from app.models.models import MediaType
 
 
-class ReviewCreateRequest(BaseModel):
-    tmdb_id: int = Field(gt=0, description="TMDB id from the library item")
-    type: MediaType | None = Field(default=None, description="Optional media type to disambiguate ids")
-    rating: int = Field(ge=1, le=5)
-    comment: str = Field(min_length=1, max_length=2000)
-
-
-class ReviewResponse(BaseModel):
+class TMDBSearchItem(BaseModel):
     id: int
-    item_id: int
-    rating: int
-    comment: str
-    created_at: datetime
+    title: str = Field(alias="name")
+    media_type: MediaType
+    overview: str | None = None
+    poster_path: str | None = None
+    release_date: str | None = None
 
-    model_config = {"from_attributes": True}
+
+class TMDBDetailsResponse(BaseModel):
+    id: int
+    media_type: MediaType
+    title: str
+    overview: str | None = None
+    genres: list[str] = []
+    runtime: int | None = None
+    number_of_seasons: int | None = None
+    number_of_episodes: int | None = None
+    release_date: str | None = None
+    poster_path: str | None = None
+    vote_average: float | None = None
