@@ -48,7 +48,7 @@ async def search_titles(
 
     data = normalized_results[:page_size]
     total = payload.get("total_results", len(normalized_results))
-    response.headers["X-Total-Count"] = str(total)  
+    response.headers["X-Total-Count"] = str(total)
 
     return PaginatedResponse[dict](
         data=data,
@@ -65,7 +65,6 @@ async def get_details(
     tmdb_service: TMDBService = Depends(TMDBService),
 ) -> dict:
     payload, resolved_media_type = await tmdb_service.details(tmdb_id=tmdb_id, media_type=media_type)
-
 
     return {
         "id": payload.get("id"),
