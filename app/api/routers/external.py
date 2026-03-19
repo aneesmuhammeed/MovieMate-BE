@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, Query, Request, Response
 
 from app.core.config import get_settings
 from app.core.rate_limit import limiter
@@ -22,6 +22,7 @@ def _normalize_media_type(raw_type: str | None) -> MediaType | None:
 @limiter.limit(settings.search_rate_limit)
 async def search_titles(
     request: Request,
+    response: Response,
     query: str = Query(min_length=1, max_length=200),
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=settings.default_page_size, ge=1, le=settings.max_page_size),
@@ -47,6 +48,7 @@ async def search_titles(
 
     data = normalized_results[:page_size]
     total = payload.get("total_results", len(normalized_results))
+    response.headers["X-Total-Count"] = str(total)  
 
     return PaginatedResponse[dict](
         data=data,
@@ -59,14 +61,15 @@ async def search_titles(
 async def get_details(
     request: Request,
     tmdb_id: int,
-    media_type: MediaType = Query(description="movie or tv"),
+    media_type: MediaType | None = Query(default=None, description="movie or tv. Optional; auto-detected when omitted."),
     tmdb_service: TMDBService = Depends(TMDBService),
 ) -> dict:
-    payload = await tmdb_service.details(tmdb_id=tmdb_id, media_type=media_type)
+    payload, resolved_media_type = await tmdb_service.details(tmdb_id=tmdb_id, media_type=media_type)
+
 
     return {
         "id": payload.get("id"),
-        "media_type": media_type,
+        "media_type": resolved_media_type,
         "title": payload.get("title") or payload.get("name"),
         "overview": payload.get("overview"),
         "genres": [genre.get("name") for genre in payload.get("genres", []) if genre.get("name")],

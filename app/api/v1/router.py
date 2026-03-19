@@ -1,15 +1,12 @@
 from fastapi import APIRouter
 
-from app.core.config import get_settings
-from app.api.v1.router import v1_router
+from app.api.routers.external import router as external_router
+from app.api.routers.library import router as library_router
+from app.api.routers.progress import router as progress_router
+from app.api.routers.review import router as review_router
 
-api_router = APIRouter()
-settings = get_settings()
-
-
-@api_router.get("", tags=["API"])
-async def api_versions() -> dict[str, list[str]]:
-	return {"versions": [settings.api_version]}
-
-
-api_router.include_router(v1_router, prefix=f"/{settings.api_version}")
+v1_router = APIRouter()
+v1_router.include_router(external_router)
+v1_router.include_router(library_router)
+v1_router.include_router(progress_router)
+v1_router.include_router(review_router)
