@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+pydantic-settings
+httpx
+slowapi
+python-dotenv
