@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import Enum
 
-from sqlalchemy import DateTime, Enum as SQLEnum, ForeignKey, Index, Integer, String, Text, UniqueConstraint
+from sqlalchemy import CheckConstraint, DateTime, Enum as SQLEnum, ForeignKey, Index, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -53,6 +53,12 @@ class Progress(Base):
     __tablename__ = "progress"
     __table_args__ = (
         Index("ix_progress_status", "status"),
+        CheckConstraint(
+            "(total_episodes IS NULL AND watched_episodes IS NULL) OR "
+            "(total_episodes IS NOT NULL AND watched_episodes IS NOT NULL AND "
+            "total_episodes >= 0 AND watched_episodes >= 0 AND watched_episodes <= total_episodes)",
+            name="ck_progress_episode_values",
+        ),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
@@ -76,6 +82,7 @@ class Review(Base):
         Index("ix_reviews_item_id", "item_id"),
         Index("ix_reviews_rating", "rating"),
         Index("ix_reviews_created_at", "created_at"),
+        CheckConstraint("rating >= 1 AND rating <= 5", name="ck_review_rating_range"),
     )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
