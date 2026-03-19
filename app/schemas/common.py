@@ -15,3 +15,4 @@ class PaginationMeta(BaseModel):
 class PaginatedResponse(GenericModel, Generic[T]):
     data: List[T]
     meta: PaginationMeta
+    summary: str | None = None

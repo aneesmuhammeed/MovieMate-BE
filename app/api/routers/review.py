@@ -9,6 +9,8 @@ from app.models.models import MediaType, MovieShow, Review
 from app.schemas.common import PaginatedResponse, PaginationMeta
 from app.schemas.review import ReviewCreateRequest, ReviewResponse
 
+from app.services.gemini_service import summarize_reviews
+
 router = APIRouter(tags=["Reviews"])
 settings = get_settings()
 
@@ -64,10 +66,15 @@ async def get_reviews(
         .offset((page - 1) * page_size)
         .limit(page_size)
     ).scalars().all()
+    
+    comments = [review.comment for review in reviews]
+
+    summary = summarize_reviews(comments)
 
     response.headers["X-Total-Count"] = str(total)
 
     return PaginatedResponse[ReviewResponse](
         data=[ReviewResponse.model_validate(review) for review in reviews],
         meta=PaginationMeta(page=page, page_size=page_size, total=total),
+        summary=summary,
     )

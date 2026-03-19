@@ -36,6 +36,8 @@ class Settings(BaseSettings):
     search_rate_limit: str = Field(..., validation_alias="SEARCH_RATE_LIMIT")
     detail_rate_limit: str = Field(..., validation_alias="DETAIL_RATE_LIMIT")
 
+    gemini_api_key: str = Field(..., validation_alias="GEMINI_API_KEY")
+
     @field_validator("cors_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, value: Any) -> List[str]:
