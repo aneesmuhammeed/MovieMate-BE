@@ -33,6 +33,12 @@ class TMDBService:
             detail = "Failed to fetch data from TMDB"
             if exc.response.status_code == status.HTTP_404_NOT_FOUND:
                 detail = "TMDB item not found"
+            elif exc.response.status_code >= status.HTTP_500_INTERNAL_SERVER_ERROR:
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail="TMDB service error",
+                ) from exc
+
             raise HTTPException(status_code=exc.response.status_code, detail=detail) from exc
         except httpx.RequestError as exc:
             raise HTTPException(
@@ -50,5 +56,21 @@ class TMDBService:
             },
         )
 
-    async def details(self, tmdb_id: int, media_type: MediaType) -> dict[str, Any]:
-        return await self._request(f"/{media_type.value}/{tmdb_id}")
+    async def details(
+        self,
+        tmdb_id: int,
+        media_type: MediaType | None = None,
+    ) -> tuple[dict[str, Any], MediaType]:
+        if media_type is not None:
+            payload = await self._request(f"/{media_type.value}/{tmdb_id}")
+            return payload, media_type
+
+        for candidate in (MediaType.MOVIE, MediaType.TV):
+            try:
+                payload = await self._request(f"/{candidate.value}/{tmdb_id}")
+                return payload, candidate
+            except HTTPException as exc:
+                if exc.status_code != status.HTTP_404_NOT_FOUND:
+                    raise
+
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="TMDB item not found")
